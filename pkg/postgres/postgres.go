@@ -15,16 +15,16 @@ var DB *gorm.DB
 func New() (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-		config.Env.DBHost,
-		config.Env.DBUser,
-		config.Env.DBPassword,
-		config.Env.DBName,
-		config.Env.DBPort,
-		config.Env.DBSSLMode,
+		config.Env.DB.Host,
+		config.Env.DB.User,
+		config.Env.DB.Password,
+		config.Env.DB.Name,
+		config.Env.DB.Port,
+		config.Env.DB.SSLMode,
 	)
 
 	var logLevel logger.LogLevel
-	if config.Env.Environment == "production" {
+	if config.Env.App.Environment == "production" {
 		logLevel = logger.Silent
 	} else {
 		logLevel = logger.Info

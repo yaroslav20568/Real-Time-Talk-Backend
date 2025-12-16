@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	if config.Env.Environment == "production" {
+	if config.Env.App.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
