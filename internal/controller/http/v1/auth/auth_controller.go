@@ -71,18 +71,18 @@ func setTokenCookies(c *gin.Context, accessToken, refreshToken string) {
 func (ac *AuthController) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	user, err := ac.authUsecase.Register(req.Email, req.Password, req.FirstName, req.LastName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "user registered successfully, verification code sent to email",
+		"success": true,
 		"user":    user,
 	})
 }
@@ -101,20 +101,20 @@ func (ac *AuthController) Register(c *gin.Context) {
 func (ac *AuthController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	accessToken, refreshToken, user, err := ac.authUsecase.Login(req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	setTokenCookies(c, accessToken, refreshToken)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "login successful",
+		"success": true,
 		"user":    user,
 	})
 }
@@ -132,20 +132,20 @@ func (ac *AuthController) Login(c *gin.Context) {
 func (ac *AuthController) VerifyCode(c *gin.Context) {
 	var req VerifyCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	accessToken, refreshToken, user, err := ac.authUsecase.VerifyTwoFactorCode(req.Email, req.Code)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	setTokenCookies(c, accessToken, refreshToken)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "email verified successfully",
+		"success": true,
 		"user":    user,
 	})
 }
@@ -163,18 +163,18 @@ func (ac *AuthController) VerifyCode(c *gin.Context) {
 func (ac *AuthController) ResendCode(c *gin.Context) {
 	var req ResendCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	err := ac.authUsecase.SendTwoFactorCode(req.Email)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "verification code sent to email",
+		"success": true,
 	})
 }
 
@@ -190,20 +190,20 @@ func (ac *AuthController) ResendCode(c *gin.Context) {
 func (ac *AuthController) Refresh(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "refresh token not found"})
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "refresh token not found"})
 		return
 	}
 
 	accessToken, newRefreshToken, user, err := ac.authUsecase.RefreshToken(refreshToken)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	setTokenCookies(c, accessToken, newRefreshToken)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "tokens refreshed successfully",
+		"success": true,
 		"user":    user,
 	})
 }
@@ -221,11 +221,12 @@ func (ac *AuthController) Refresh(c *gin.Context) {
 func (ac *AuthController) Me(c *gin.Context) {
 	user, exists := c.Get("user")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "user not found"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"user": user,
+		"success": true,
+		"user":    user,
 	})
 }

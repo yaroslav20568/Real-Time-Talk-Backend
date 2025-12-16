@@ -27,14 +27,14 @@ func AuthMiddleware(authUsecase interfaces.AuthUsecase) gin.HandlerFunc {
 		}
 
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "access token required"})
+			c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "access token required"})
 			c.Abort()
 			return
 		}
 
 		user, err := authUsecase.ValidateAccessToken(token)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "invalid or expired token"})
 			c.Abort()
 			return
 		}
