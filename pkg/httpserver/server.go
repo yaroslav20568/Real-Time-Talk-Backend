@@ -20,7 +20,7 @@ type Option func(*Server)
 func Port(port string) Option {
 	return func(s *Server) {
 		if port == "" {
-			port = config.Env.Port
+			port = config.Env.App.Port
 		}
 		s.server.Addr = ":" + port
 	}
@@ -43,7 +43,7 @@ func New(handler http.Handler, opts ...Option) *Server {
 	}
 
 	if s.server.Addr == "" {
-		s.server.Addr = ":" + config.Env.Port
+		s.server.Addr = ":" + config.Env.App.Port
 	}
 
 	s.start()
