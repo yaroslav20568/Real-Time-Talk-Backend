@@ -3,6 +3,8 @@ package app
 import (
 	"fmt"
 
+	"gin-real-time-talk/internal/entity"
+
 	"gorm.io/gorm"
 )
 
@@ -11,5 +13,7 @@ func Migrate(db *gorm.DB) error {
 		return fmt.Errorf("database connection is not initialized")
 	}
 
-	return db.AutoMigrate()
+	return db.AutoMigrate(
+		&entity.User{},
+	)
 }
