@@ -58,6 +58,16 @@ func setTokenCookies(c *gin.Context, accessToken, refreshToken string) {
 	c.SetCookie("refresh_token", refreshToken, int(refreshExpiry.Seconds()), "/", "", isSecure, true)
 }
 
+// Register godoc
+// @Summary Register new user
+// @Description Registers a new user and sends verification code to email
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "Registration data"
+// @Success 201 {object} map[string]interface{} "User successfully registered"
+// @Failure 400 {object} map[string]string "Validation or registration error"
+// @Router /auth/register [post]
 func (ac *AuthController) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -77,6 +87,17 @@ func (ac *AuthController) Register(c *gin.Context) {
 	})
 }
 
+// Login godoc
+// @Summary User login
+// @Description Authenticates user and returns access tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Login credentials"
+// @Success 200 {object} map[string]interface{} "Successful login"
+// @Failure 400 {object} map[string]string "Validation error"
+// @Failure 401 {object} map[string]string "Invalid credentials"
+// @Router /auth/login [post]
 func (ac *AuthController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -98,6 +119,16 @@ func (ac *AuthController) Login(c *gin.Context) {
 	})
 }
 
+// VerifyCode godoc
+// @Summary Verify code
+// @Description Verifies email verification code and issues access tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body VerifyCodeRequest true "Email and verification code"
+// @Success 200 {object} map[string]interface{} "Email successfully verified"
+// @Failure 400 {object} map[string]string "Validation error or invalid code"
+// @Router /auth/verify [post]
 func (ac *AuthController) VerifyCode(c *gin.Context) {
 	var req VerifyCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -119,6 +150,16 @@ func (ac *AuthController) VerifyCode(c *gin.Context) {
 	})
 }
 
+// ResendCode godoc
+// @Summary Resend verification code
+// @Description Sends a new verification code to the specified email
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body ResendCodeRequest true "Email to send code to"
+// @Success 200 {object} map[string]string "Code sent to email"
+// @Failure 400 {object} map[string]string "Validation or sending error"
+// @Router /auth/resend-code [post]
 func (ac *AuthController) ResendCode(c *gin.Context) {
 	var req ResendCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -137,6 +178,15 @@ func (ac *AuthController) ResendCode(c *gin.Context) {
 	})
 }
 
+// Refresh godoc
+// @Summary Refresh access tokens
+// @Description Refreshes access and refresh tokens using current refresh token from cookies
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "Tokens successfully refreshed"
+// @Failure 401 {object} map[string]string "Refresh token not found or invalid"
+// @Router /auth/refresh [post]
 func (ac *AuthController) Refresh(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
@@ -158,6 +208,16 @@ func (ac *AuthController) Refresh(c *gin.Context) {
 	})
 }
 
+// Me godoc
+// @Summary Get current user
+// @Description Returns information about the current authenticated user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "User information"
+// @Failure 401 {object} map[string]string "User not authenticated"
+// @Router /auth/me [get]
 func (ac *AuthController) Me(c *gin.Context) {
 	user, exists := c.Get("user")
 	if !exists {
