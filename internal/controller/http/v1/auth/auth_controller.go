@@ -6,6 +6,7 @@ import (
 
 	"gin-real-time-talk/config"
 	"gin-real-time-talk/internal/entity/interfaces"
+	"gin-real-time-talk/pkg/validator"
 
 	"github.com/gin-gonic/gin"
 )
@@ -71,7 +72,7 @@ func setTokenCookies(c *gin.Context, accessToken, refreshToken string) {
 func (ac *AuthController) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": validator.FormatErrors(err)})
 		return
 	}
 
@@ -101,7 +102,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 func (ac *AuthController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": validator.FormatErrors(err)})
 		return
 	}
 
@@ -132,7 +133,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 func (ac *AuthController) VerifyCode(c *gin.Context) {
 	var req VerifyCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": validator.FormatErrors(err)})
 		return
 	}
 
@@ -163,7 +164,7 @@ func (ac *AuthController) VerifyCode(c *gin.Context) {
 func (ac *AuthController) ResendCode(c *gin.Context) {
 	var req ResendCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": validator.FormatErrors(err)})
 		return
 	}
 
