@@ -68,6 +68,20 @@ func (u *authUsecase) Login(email, password string) (string, string, *entity.Use
 		return "", "", nil, errors.New("email not verified")
 	}
 
+	needTwoFactor := false
+	if user.TwoFactorVerifiedAt == nil {
+		needTwoFactor = true
+	} else {
+		lastVerified := *user.TwoFactorVerifiedAt
+		if time.Since(lastVerified) >= 24*time.Hour {
+			needTwoFactor = true
+		}
+	}
+
+	if needTwoFactor {
+		return "", "", nil, errors.New("two factor verification required")
+	}
+
 	accessToken, err := jwt.GenerateAccessToken(user.ID, user.Email)
 	if err != nil {
 		return "", "", nil, fmt.Errorf("failed to generate access token: %w", err)
@@ -127,6 +141,8 @@ func (u *authUsecase) VerifyTwoFactorCode(email, code string) (string, string, *
 	}
 
 	user.EmailVerified = true
+	now := time.Now()
+	user.TwoFactorVerifiedAt = &now
 	user.TwoFactorCode = ""
 	user.TwoFactorExpiresAt = nil
 
