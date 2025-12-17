@@ -50,12 +50,6 @@ func (u *authUsecase) Register(email, password, firstName, lastName string) (*en
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	if u.emailService.IsConfigured() {
-		if err := u.SendTwoFactorCode(email); err != nil {
-			return nil, fmt.Errorf("failed to send verification code: %w", err)
-		}
-	}
-
 	return user, nil
 }
 

@@ -61,7 +61,7 @@ func setTokenCookies(c *gin.Context, accessToken, refreshToken string) {
 
 // Register godoc
 // @Summary Register new user
-// @Description Registers a new user and sends verification code to email
+// @Description Registers a new user
 // @Tags auth
 // @Accept json
 // @Produce json
@@ -108,6 +108,14 @@ func (ac *AuthController) Login(c *gin.Context) {
 
 	accessToken, refreshToken, user, err := ac.authUsecase.Login(req.Email, req.Password)
 	if err != nil {
+		if err.Error() == "email not verified" {
+			if sendErr := ac.authUsecase.SendTwoFactorCode(req.Email); sendErr != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": sendErr.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"success": true, "case": "verify email"})
+			return
+		}
 		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": err.Error()})
 		return
 	}
