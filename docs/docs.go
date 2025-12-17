@@ -303,6 +303,12 @@ const docTemplate = `{
                         "description": "Token for pagination",
                         "name": "nextToken",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search query for user name or last message text",
+                        "name": "search",
+                        "in": "query"
                     }
                 ],
                 "responses": {

@@ -23,10 +23,10 @@ func NewMessageRepository(db *gorm.DB) interfaces.MessageRepository {
 func (r *messageRepository) GetByChatID(chatID uint, limit int, nextToken string) ([]entity.Message, string, error) {
 	limit = pagination.NormalizeLimit(limit)
 
-	query := r.db.Where("chat_id = ?", chatID).
+	query := r.db.Where(&entity.Message{ChatID: chatID}).
 		Preload("Author").
 		Preload("Chat").
-		Order("created_at DESC, id DESC")
+		Order("messages.created_at DESC, messages.id DESC")
 
 	if nextToken != "" {
 		tokenData, err := pagination.ParseToken(nextToken)
@@ -37,9 +37,9 @@ func (r *messageRepository) GetByChatID(chatID uint, limit int, nextToken string
 		if tokenData != nil {
 			if tokenData.Timestamp > 0 {
 				lastCreatedAt := time.Unix(tokenData.Timestamp, 0)
-				query = query.Where("(created_at < ? OR (created_at = ? AND id < ?))", lastCreatedAt, lastCreatedAt, tokenData.ID)
+				query = query.Where("(messages.created_at < ? OR (messages.created_at = ? AND messages.id < ?))", lastCreatedAt, lastCreatedAt, tokenData.ID)
 			} else {
-				query = query.Where("id < ?", tokenData.ID)
+				query = query.Where("messages.id < ?", tokenData.ID)
 			}
 		}
 	}

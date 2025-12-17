@@ -20,10 +20,10 @@ func NewChatUsecase(chatRepo interfaces.ChatRepository, messageRepo interfaces.M
 	}
 }
 
-func (u *chatUsecase) GetUserChats(userID uint, limit int, nextToken string) ([]entity.Chat, string, error) {
+func (u *chatUsecase) GetUserChats(userID uint, limit int, nextToken string, search string) ([]entity.Chat, string, error) {
 	limit = pagination.NormalizeLimit(limit)
 
-	chats, newNextToken, err := u.chatRepo.GetByUserID(userID, limit, nextToken)
+	chats, newNextToken, err := u.chatRepo.GetByUserID(userID, limit, nextToken, search)
 	if err != nil {
 		return nil, "", err
 	}
