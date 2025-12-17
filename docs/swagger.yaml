@@ -5,6 +5,7 @@ definitions:
       email:
         type: string
       password:
+        minLength: 6
         type: string
     required:
     - email
@@ -137,7 +138,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Registers a new user and sends verification code to email
+      description: Registers a new user
       parameters:
       - description: Registration data
         in: body

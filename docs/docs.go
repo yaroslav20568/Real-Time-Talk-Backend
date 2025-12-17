@@ -141,7 +141,7 @@ const docTemplate = `{
         },
         "/auth/register": {
             "post": {
-                "description": "Registers a new user and sends verification code to email",
+                "description": "Registers a new user",
                 "consumes": [
                     "application/json"
                 ],
@@ -286,7 +286,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 6
                 }
             }
         },
