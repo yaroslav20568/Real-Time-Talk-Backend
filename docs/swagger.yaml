@@ -222,6 +222,89 @@ paths:
       summary: Verify code
       tags:
       - auth
+  /chats:
+    get:
+      consumes:
+      - application/json
+      description: Returns paginated list of chats for the authenticated user
+      parameters:
+      - description: 'Number of items per page (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Token for pagination
+        in: query
+        name: nextToken
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of chats
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user chats
+      tags:
+      - chats
+  /chats/{id}/messages:
+    get:
+      consumes:
+      - application/json
+      description: Returns paginated list of messages for a specific chat
+      parameters:
+      - description: Chat ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 'Number of items per page (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Token for pagination
+        in: query
+        name: nextToken
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of messages
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get chat messages
+      tags:
+      - chats
 schemes:
 - http
 - https
