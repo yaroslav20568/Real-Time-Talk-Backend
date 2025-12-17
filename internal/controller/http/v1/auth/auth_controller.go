@@ -108,7 +108,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 
 	accessToken, refreshToken, user, err := ac.authUsecase.Login(req.Email, req.Password)
 	if err != nil {
-		if err.Error() == "email not verified" {
+		if err.Error() == "email not verified" || err.Error() == "two factor verification required" {
 			if sendErr := ac.authUsecase.SendTwoFactorCode(req.Email); sendErr != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": sendErr.Error()})
 				return
