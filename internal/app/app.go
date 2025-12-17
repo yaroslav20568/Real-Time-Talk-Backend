@@ -10,9 +10,11 @@ import (
 	"gin-real-time-talk/pkg/httpserver"
 	"gin-real-time-talk/pkg/logger"
 	"gin-real-time-talk/pkg/postgres"
+	"gin-real-time-talk/pkg/validator"
 )
 
 func Run() error {
+	validator.Init()
 	logger := logger.New()
 
 	db, err := postgres.New()
