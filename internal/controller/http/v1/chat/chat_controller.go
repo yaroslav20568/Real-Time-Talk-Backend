@@ -29,6 +29,7 @@ func NewChatController(chatUsecase interfaces.ChatUsecase) *ChatController {
 // @Security BearerAuth
 // @Param limit query int false "Number of items per page (default: 20, max: 100)"
 // @Param nextToken query string false "Token for pagination"
+// @Param search query string false "Search query for user name or last message text"
 // @Success 200 {object} map[string]interface{} "List of chats"
 // @Failure 400 {object} map[string]string "Bad request"
 // @Failure 401 {object} map[string]string "Unauthorized"
@@ -54,8 +55,9 @@ func (cc *ChatController) GetUserChats(c *gin.Context) {
 
 	limit = pagination.NormalizeLimit(limit)
 	nextToken := c.Query("nextToken")
+	search := c.Query("search")
 
-	chats, newNextToken, err := cc.chatUsecase.GetUserChats(userIDUint, limit, nextToken)
+	chats, newNextToken, err := cc.chatUsecase.GetUserChats(userIDUint, limit, nextToken, search)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return

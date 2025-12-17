@@ -236,6 +236,10 @@ paths:
         in: query
         name: nextToken
         type: string
+      - description: Search query for user name or last message text
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:

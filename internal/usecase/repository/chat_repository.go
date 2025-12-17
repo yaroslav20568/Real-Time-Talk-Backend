@@ -20,13 +20,20 @@ func NewChatRepository(db *gorm.DB) interfaces.ChatRepository {
 	}
 }
 
-func (r *chatRepository) GetByUserID(userID uint, limit int, nextToken string) ([]entity.Chat, string, error) {
+func (r *chatRepository) GetByUserID(userID uint, limit int, nextToken string, search string) ([]entity.Chat, string, error) {
 	limit = pagination.NormalizeLimit(limit)
 
-	query := r.db.Where("user_id = ?", userID).
+	query := r.db.Where(&entity.Chat{UserID: userID}).
 		Preload("User").
-		Preload("LastMessage").
-		Order("updated_at DESC, id DESC")
+		Preload("LastMessage")
+
+	if search != "" {
+		searchPattern := "%" + search + "%"
+		query = query.Joins("User").
+			Where("users.full_name ILIKE ? OR chats.last_message_text ILIKE ?", searchPattern, searchPattern)
+	}
+
+	query = query.Order("chats.updated_at DESC, chats.id DESC")
 
 	if nextToken != "" {
 		tokenData, err := pagination.ParseToken(nextToken)
@@ -37,9 +44,9 @@ func (r *chatRepository) GetByUserID(userID uint, limit int, nextToken string) (
 		if tokenData != nil {
 			if tokenData.Timestamp > 0 {
 				lastUpdatedAt := time.Unix(tokenData.Timestamp, 0)
-				query = query.Where("(updated_at < ? OR (updated_at = ? AND id < ?))", lastUpdatedAt, lastUpdatedAt, tokenData.ID)
+				query = query.Where("(chats.updated_at < ? OR (chats.updated_at = ? AND chats.id < ?))", lastUpdatedAt, lastUpdatedAt, tokenData.ID)
 			} else {
-				query = query.Where("id < ?", tokenData.ID)
+				query = query.Where("chats.id < ?", tokenData.ID)
 			}
 		}
 	}
