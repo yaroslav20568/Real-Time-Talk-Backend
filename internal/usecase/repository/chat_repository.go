@@ -44,7 +44,7 @@ func (r *chatRepository) GetByUserID(userID uint, limit int, page int, search st
 
 	query = query.Order("chats.updated_at DESC, chats.id DESC").
 		Preload("User").
-		Preload("LastMessage").
+		Preload("LastMessage.Author").
 		Offset(offset).
 		Limit(limit)
 
@@ -53,14 +53,23 @@ func (r *chatRepository) GetByUserID(userID uint, limit int, page int, search st
 		return nil, 0, err
 	}
 
+	for i := range chats {
+		if chats[i].LastMessage != nil {
+			chats[i].LastMessage.Chat = nil
+		}
+	}
+
 	return chats, total, nil
 }
 
 func (r *chatRepository) GetByID(id uint) (*entity.Chat, error) {
 	var chat entity.Chat
-	err := r.db.Preload("User").Preload("LastMessage").First(&chat, id).Error
+	err := r.db.Preload("User").Preload("LastMessage.Author").First(&chat, id).Error
 	if err != nil {
 		return nil, err
+	}
+	if chat.LastMessage != nil {
+		chat.LastMessage.Chat = nil
 	}
 	return &chat, nil
 }

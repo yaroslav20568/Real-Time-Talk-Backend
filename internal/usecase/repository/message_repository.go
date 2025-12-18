@@ -33,7 +33,7 @@ func (r *messageRepository) GetByChatID(chatID uint, limit int, page int) ([]ent
 
 	query := r.db.Where(&entity.Message{ChatID: chatID}).
 		Preload("Author").
-		Preload("Chat").
+		Preload("Chat.User").
 		Order("messages.created_at DESC, messages.id DESC").
 		Offset(offset).
 		Limit(limit)
@@ -44,6 +44,15 @@ func (r *messageRepository) GetByChatID(chatID uint, limit int, page int) ([]ent
 	}
 
 	return messages, total, nil
+}
+
+func (r *messageRepository) GetByID(id uint) (*entity.Message, error) {
+	var message entity.Message
+	err := r.db.Preload("Author").Preload("Chat.User").First(&message, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &message, nil
 }
 
 func (r *messageRepository) Create(message *entity.Message) error {
