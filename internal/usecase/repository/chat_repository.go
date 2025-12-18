@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"time"
-
 	"gin-real-time-talk/internal/entity"
 	"gin-real-time-talk/internal/entity/interfaces"
 	"gin-real-time-talk/pkg/pagination"
@@ -20,50 +18,42 @@ func NewChatRepository(db *gorm.DB) interfaces.ChatRepository {
 	}
 }
 
-func (r *chatRepository) GetByUserID(userID uint, limit int, nextToken string, search string) ([]entity.Chat, string, error) {
+func (r *chatRepository) GetByUserID(userID uint, limit int, page int, search string) ([]entity.Chat, int64, error) {
 	limit = pagination.NormalizeLimit(limit)
+	page = pagination.NormalizePage(page)
+	offset := pagination.CalculateOffset(page, limit)
 
-	query := r.db.Where(&entity.Chat{UserID: userID}).
-		Preload("User").
-		Preload("LastMessage")
+	query := r.db.Model(&entity.Chat{}).
+		Where("chats.user_id = ?", userID)
+
+	countQuery := r.db.Model(&entity.Chat{}).
+		Where("chats.user_id = ?", userID)
 
 	if search != "" {
 		searchPattern := "%" + search + "%"
 		query = query.Joins("User").
 			Where("users.full_name ILIKE ? OR chats.last_message_text ILIKE ?", searchPattern, searchPattern)
+		countQuery = countQuery.Joins("User").
+			Where("users.full_name ILIKE ? OR chats.last_message_text ILIKE ?", searchPattern, searchPattern)
 	}
 
-	query = query.Order("chats.updated_at DESC, chats.id DESC")
-
-	if nextToken != "" {
-		tokenData, err := pagination.ParseToken(nextToken)
-		if err != nil {
-			return nil, "", err
-		}
-
-		if tokenData != nil {
-			if tokenData.Timestamp > 0 {
-				lastUpdatedAt := time.Unix(tokenData.Timestamp, 0)
-				query = query.Where("(chats.updated_at < ? OR (chats.updated_at = ? AND chats.id < ?))", lastUpdatedAt, lastUpdatedAt, tokenData.ID)
-			} else {
-				query = query.Where("chats.id < ?", tokenData.ID)
-			}
-		}
+	var total int64
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
+
+	query = query.Order("chats.updated_at DESC, chats.id DESC").
+		Preload("User").
+		Preload("LastMessage").
+		Offset(offset).
+		Limit(limit)
 
 	var chats []entity.Chat
-	if err := query.Limit(limit + 1).Find(&chats).Error; err != nil {
-		return nil, "", err
+	if err := query.Find(&chats).Error; err != nil {
+		return nil, 0, err
 	}
 
-	var newNextToken string
-	if len(chats) > limit {
-		lastChat := chats[limit-1]
-		newNextToken = pagination.GenerateToken(lastChat.ID, lastChat.UpdatedAt.Unix())
-		chats = chats[:limit]
-	}
-
-	return chats, newNextToken, nil
+	return chats, total, nil
 }
 
 func (r *chatRepository) GetByID(id uint) (*entity.Chat, error) {

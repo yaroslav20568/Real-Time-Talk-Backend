@@ -1,3 +1,4 @@
 .env
 cmd/app/tmp/
+cmd/seed/
 scripts/

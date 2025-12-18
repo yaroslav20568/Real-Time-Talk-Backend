@@ -20,33 +20,37 @@ func NewChatUsecase(chatRepo interfaces.ChatRepository, messageRepo interfaces.M
 	}
 }
 
-func (u *chatUsecase) GetUserChats(userID uint, limit int, nextToken string, search string) ([]entity.Chat, string, error) {
+func (u *chatUsecase) GetUserChats(userID uint, limit int, page int, search string) ([]entity.Chat, int, int64, error) {
 	limit = pagination.NormalizeLimit(limit)
 
-	chats, newNextToken, err := u.chatRepo.GetByUserID(userID, limit, nextToken, search)
+	chats, total, err := u.chatRepo.GetByUserID(userID, limit, page, search)
 	if err != nil {
-		return nil, "", err
+		return nil, 0, 0, err
 	}
 
-	return chats, newNextToken, nil
+	totalPages := pagination.CalculateTotalPages(total, limit)
+
+	return chats, totalPages, total, nil
 }
 
-func (u *chatUsecase) GetChatMessages(chatID uint, userID uint, limit int, nextToken string) ([]entity.Message, string, error) {
+func (u *chatUsecase) GetChatMessages(chatID uint, userID uint, limit int, page int) ([]entity.Message, int, int64, error) {
 	chat, err := u.chatRepo.GetByID(chatID)
 	if err != nil {
-		return nil, "", errors.New("chat not found")
+		return nil, 0, 0, errors.New("chat not found")
 	}
 
 	if chat.UserID != userID {
-		return nil, "", errors.New("access denied")
+		return nil, 0, 0, errors.New("access denied")
 	}
 
 	limit = pagination.NormalizeLimit(limit)
 
-	messages, newNextToken, err := u.messageRepo.GetByChatID(chatID, limit, nextToken)
+	messages, total, err := u.messageRepo.GetByChatID(chatID, limit, page)
 	if err != nil {
-		return nil, "", err
+		return nil, 0, 0, err
 	}
 
-	return messages, newNextToken, nil
+	totalPages := pagination.CalculateTotalPages(total, limit)
+
+	return messages, totalPages, total, nil
 }

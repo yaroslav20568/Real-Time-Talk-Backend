@@ -28,9 +28,9 @@ func NewChatController(chatUsecase interfaces.ChatUsecase) *ChatController {
 // @Produce json
 // @Security BearerAuth
 // @Param limit query int false "Number of items per page (default: 20, max: 100)"
-// @Param nextToken query string false "Token for pagination"
+// @Param currentPage query int false "Current page number (default: 1)"
 // @Param search query string false "Search query for user name or last message text"
-// @Success 200 {object} map[string]interface{} "List of chats"
+// @Success 200 {object} map[string]interface{} "List of chats with pagination info"
 // @Failure 400 {object} map[string]string "Bad request"
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Router /chats [get]
@@ -53,11 +53,17 @@ func (cc *ChatController) GetUserChats(c *gin.Context) {
 		limit = pagination.DefaultLimit
 	}
 
+	pageStr := c.DefaultQuery("currentPage", "1")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		page = 1
+	}
+
 	limit = pagination.NormalizeLimit(limit)
-	nextToken := c.Query("nextToken")
+	page = pagination.NormalizePage(page)
 	search := c.Query("search")
 
-	chats, newNextToken, err := cc.chatUsecase.GetUserChats(userIDUint, limit, nextToken, search)
+	chats, totalPages, total, err := cc.chatUsecase.GetUserChats(userIDUint, limit, page, search)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
@@ -65,11 +71,12 @@ func (cc *ChatController) GetUserChats(c *gin.Context) {
 
 	response := gin.H{
 		"success": true,
-		"chats":   chats,
-	}
-
-	if newNextToken != "" {
-		response["nextToken"] = newNextToken
+		"data": gin.H{
+			"items":       chats,
+			"currentPage": page,
+			"totalPages":  totalPages,
+			"total":       total,
+		},
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -84,8 +91,8 @@ func (cc *ChatController) GetUserChats(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Chat ID"
 // @Param limit query int false "Number of items per page (default: 20, max: 100)"
-// @Param nextToken query string false "Token for pagination"
-// @Success 200 {object} map[string]interface{} "List of messages"
+// @Param currentPage query int false "Current page number (default: 1)"
+// @Success 200 {object} map[string]interface{} "List of messages with pagination info"
 // @Failure 400 {object} map[string]string "Bad request"
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Router /chats/{id}/messages [get]
@@ -115,22 +122,29 @@ func (cc *ChatController) GetChatMessages(c *gin.Context) {
 		limit = pagination.DefaultLimit
 	}
 
-	limit = pagination.NormalizeLimit(limit)
-	nextToken := c.Query("nextToken")
+	pageStr := c.DefaultQuery("currentPage", "1")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		page = 1
+	}
 
-	messages, newNextToken, err := cc.chatUsecase.GetChatMessages(uint(chatID), userIDUint, limit, nextToken)
+	limit = pagination.NormalizeLimit(limit)
+	page = pagination.NormalizePage(page)
+
+	messages, totalPages, total, err := cc.chatUsecase.GetChatMessages(uint(chatID), userIDUint, limit, page)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	response := gin.H{
-		"success":  true,
-		"messages": messages,
-	}
-
-	if newNextToken != "" {
-		response["nextToken"] = newNextToken
+		"success": true,
+		"data": gin.H{
+			"items":       messages,
+			"currentPage": page,
+			"totalPages":  totalPages,
+			"total":       total,
+		},
 	}
 
 	c.JSON(http.StatusOK, response)
