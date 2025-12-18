@@ -83,5 +83,10 @@ func (u *chatUsecase) CreateMessage(senderID uint, recipientID uint, text string
 		return nil, err
 	}
 
-	return message, nil
+	messageWithRelations, err := u.messageRepo.GetByID(message.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return messageWithRelations, nil
 }
