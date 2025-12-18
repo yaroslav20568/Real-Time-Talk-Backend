@@ -233,6 +233,44 @@ paths:
       summary: Verify code
       tags:
       - auth
+  /chat/message:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new message in a chat. If chat doesn't exist between
+        users, creates a new chat
+      parameters:
+      - description: Message creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chat.CreateMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create message
+      tags:
+      - chats
   /chats:
     get:
       consumes:
@@ -318,44 +356,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Get chat messages
-      tags:
-      - chats
-  /chats/messages:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new message in a chat. If chat doesn't exist between
-        users, creates a new chat
-      parameters:
-      - description: Message creation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/chat.CreateMessageRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Created message
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Create message
       tags:
       - chats
 schemes:
