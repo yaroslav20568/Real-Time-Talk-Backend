@@ -340,6 +340,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/chats/messages": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new message in a chat. If chat doesn't exist between users, creates a new chat",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chats"
+                ],
+                "summary": "Create message",
+                "parameters": [
+                    {
+                        "description": "Message creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/chat.CreateMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Created message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/chats/{id}/messages": {
             "get": {
                 "security": [
@@ -473,6 +531,22 @@ const docTemplate = `{
                 },
                 "email": {
                     "type": "string"
+                }
+            }
+        },
+        "chat.CreateMessageRequest": {
+            "type": "object",
+            "required": [
+                "recipientId",
+                "text"
+            ],
+            "properties": {
+                "recipientId": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string",
+                    "minLength": 1
                 }
             }
         }

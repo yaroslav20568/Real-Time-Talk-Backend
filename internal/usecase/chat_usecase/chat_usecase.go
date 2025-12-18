@@ -54,3 +54,34 @@ func (u *chatUsecase) GetChatMessages(chatID uint, userID uint, limit int, page 
 
 	return messages, totalPages, total, nil
 }
+
+func (u *chatUsecase) CreateMessage(senderID uint, recipientID uint, text string) (*entity.Message, error) {
+	if text == "" {
+		return nil, errors.New("message text cannot be empty")
+	}
+
+	chat, err := u.chatRepo.FindOrCreateChatByUsers(senderID, recipientID)
+	if err != nil {
+		return nil, err
+	}
+
+	message := &entity.Message{
+		Text:     text,
+		AuthorID: senderID,
+		ChatID:   chat.ID,
+		IsRead:   false,
+	}
+
+	if err := u.messageRepo.Create(message); err != nil {
+		return nil, err
+	}
+
+	chat.LastMessageID = &message.ID
+	chat.LastMessageText = &message.Text
+
+	if err := u.chatRepo.Update(chat); err != nil {
+		return nil, err
+	}
+
+	return message, nil
+}

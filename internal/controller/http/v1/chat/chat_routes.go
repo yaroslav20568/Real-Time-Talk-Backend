@@ -21,5 +21,6 @@ func SetupChatRoutes(api *gin.RouterGroup, db *gorm.DB, authUsecase interfaces.A
 	{
 		chats.GET("", chatController.GetUserChats)
 		chats.GET("/:id/messages", chatController.GetChatMessages)
+		chats.POST("/messages", chatController.CreateMessage)
 	}
 }

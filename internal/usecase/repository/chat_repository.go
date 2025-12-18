@@ -64,3 +64,40 @@ func (r *chatRepository) GetByID(id uint) (*entity.Chat, error) {
 	}
 	return &chat, nil
 }
+
+func (r *chatRepository) FindOrCreateChatByUsers(senderID uint, recipientID uint) (*entity.Chat, error) {
+	var chat entity.Chat
+	
+	err := r.db.Where("chats.user_id = ?", senderID).
+		Joins("JOIN messages ON messages.chat_id = chats.id").
+		Where("messages.author_id = ? OR messages.author_id = ?", senderID, recipientID).
+		Group("chats.id").
+		First(&chat).Error
+
+	if err == nil {
+		return &chat, nil
+	}
+
+	if err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	newChat := entity.Chat{
+		UserID:      senderID,
+		UnreadCount: 0,
+	}
+
+	if err := r.db.Create(&newChat).Error; err != nil {
+		return nil, err
+	}
+
+	return &newChat, nil
+}
+
+func (r *chatRepository) Create(chat *entity.Chat) error {
+	return r.db.Create(chat).Error
+}
+
+func (r *chatRepository) Update(chat *entity.Chat) error {
+	return r.db.Save(chat).Error
+}

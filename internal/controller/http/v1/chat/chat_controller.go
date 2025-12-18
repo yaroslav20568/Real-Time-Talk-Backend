@@ -149,3 +149,56 @@ func (cc *ChatController) GetChatMessages(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+type CreateMessageRequest struct {
+	RecipientID uint   `json:"recipientId" binding:"required"`
+	Text        string `json:"text" binding:"required,min=1"`
+}
+
+// CreateMessage godoc
+// @Summary Create message
+// @Description Creates a new message in a chat. If chat doesn't exist between users, creates a new chat
+// @Tags chats
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body CreateMessageRequest true "Message creation request"
+// @Success 200 {object} map[string]interface{} "Created message"
+// @Failure 400 {object} map[string]string "Bad request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Router /chats/messages [post]
+func (cc *ChatController) CreateMessage(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "user not found"})
+		return
+	}
+
+	senderID, ok := userID.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "invalid user ID"})
+		return
+	}
+
+	var req CreateMessageRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+
+	if senderID == req.RecipientID {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "cannot send message to yourself"})
+		return
+	}
+
+	message, err := cc.chatUsecase.CreateMessage(senderID, req.RecipientID, req.Text)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    message,
+	})
+}
