@@ -232,10 +232,10 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: Token for pagination
+      - description: 'Current page number (default: 1)'
         in: query
-        name: nextToken
-        type: string
+        name: currentPage
+        type: integer
       - description: Search query for user name or last message text
         in: query
         name: search
@@ -244,7 +244,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of chats
+          description: List of chats with pagination info
           schema:
             additionalProperties: true
             type: object
@@ -280,15 +280,15 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: Token for pagination
+      - description: 'Current page number (default: 1)'
         in: query
-        name: nextToken
-        type: string
+        name: currentPage
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: List of messages
+          description: List of messages with pagination info
           schema:
             additionalProperties: true
             type: object

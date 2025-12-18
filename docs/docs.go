@@ -299,9 +299,9 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Token for pagination",
-                        "name": "nextToken",
+                        "type": "integer",
+                        "description": "Current page number (default: 1)",
+                        "name": "currentPage",
                         "in": "query"
                     },
                     {
@@ -313,7 +313,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of chats",
+                        "description": "List of chats with pagination info",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -373,15 +373,15 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Token for pagination",
-                        "name": "nextToken",
+                        "type": "integer",
+                        "description": "Current page number (default: 1)",
+                        "name": "currentPage",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of messages",
+                        "description": "List of messages with pagination info",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
