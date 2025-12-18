@@ -166,7 +166,7 @@ type CreateMessageRequest struct {
 // @Success 200 {object} map[string]interface{} "Created message"
 // @Failure 400 {object} map[string]string "Bad request"
 // @Failure 401 {object} map[string]string "Unauthorized"
-// @Router /chats/messages [post]
+// @Router /chat/message [post]
 func (cc *ChatController) CreateMessage(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
