@@ -357,9 +357,9 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "Current page number (default: 1)",
-                        "name": "currentPage",
+                        "type": "string",
+                        "description": "Token for pagination (cursor-based)",
+                        "name": "nextToken",
                         "in": "query"
                     },
                     {
@@ -431,9 +431,9 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "Current page number (default: 1)",
-                        "name": "currentPage",
+                        "type": "string",
+                        "description": "Token for pagination (cursor-based)",
+                        "name": "nextToken",
                         "in": "query"
                     }
                 ],

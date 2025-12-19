@@ -18,21 +18,19 @@ func NewChatRepository(db *gorm.DB) interfaces.ChatRepository {
 	}
 }
 
-func (r *chatRepository) GetByUserID(userID uint, limit int, page int, search string) ([]entity.Chat, int64, error) {
+func (r *chatRepository) GetByUserID(userID uint, limit int, nextToken string, search string) ([]entity.Chat, string, error) {
 	limit = pagination.NormalizeLimit(limit)
-	page = pagination.NormalizePage(page)
-	offset := pagination.CalculateOffset(page, limit)
 
 	allChatsQuery := r.db.Model(&entity.Chat{}).
 		Where("chats.user_id = ?", userID)
 
 	var allChats []entity.Chat
 	if err := allChatsQuery.Find(&allChats).Error; err != nil {
-		return nil, 0, err
+		return nil, "", err
 	}
 
 	if len(allChats) == 0 {
-		return []entity.Chat{}, 0, nil
+		return []entity.Chat{}, "", nil
 	}
 
 	allChatIDs := make([]uint, len(allChats))
@@ -140,18 +138,37 @@ func (r *chatRepository) GetByUserID(userID uint, limit int, page int, search st
 		}
 	}
 
-	total := int64(len(filteredChats))
-
-	start := offset
-	if start > len(filteredChats) {
-		start = len(filteredChats)
-	}
-	end := start + limit
-	if end > len(filteredChats) {
-		end = len(filteredChats)
+	var cursorID uint
+	if nextToken != "" {
+		var err error
+		cursorID, err = pagination.DecodeToken(nextToken)
+		if err != nil {
+			cursorID = 0
+		}
 	}
 
-	chats := filteredChats[start:end]
+	var startIdx int
+	if cursorID > 0 {
+		for i, chat := range filteredChats {
+			if chat.ID == cursorID {
+				startIdx = i + 1
+				break
+			}
+		}
+	}
+
+	endIdx := startIdx + limit + 1
+	if endIdx > len(filteredChats) {
+		endIdx = len(filteredChats)
+	}
+
+	chats := filteredChats[startIdx:endIdx]
+
+	var hasNext bool
+	if len(chats) > limit {
+		hasNext = true
+		chats = chats[:limit]
+	}
 
 	chatIDs := make([]uint, len(chats))
 	for i := range chats {
@@ -179,7 +196,13 @@ func (r *chatRepository) GetByUserID(userID uint, limit int, page int, search st
 		}
 	}
 
-	return chats, total, nil
+	var token string
+	if hasNext && len(chats) > 0 {
+		lastChat := chats[len(chats)-1]
+		token = pagination.EncodeToken(lastChat.ID)
+	}
+
+	return chats, token, nil
 }
 
 func (r *chatRepository) GetByID(id uint) (*entity.Chat, error) {
