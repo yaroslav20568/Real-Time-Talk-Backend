@@ -18,32 +18,44 @@ func NewMessageRepository(db *gorm.DB) interfaces.MessageRepository {
 	}
 }
 
-func (r *messageRepository) GetByChatID(chatID uint, limit int, page int) ([]entity.Message, int64, error) {
+func (r *messageRepository) GetByChatID(chatID uint, limit int, nextToken string) ([]entity.Message, string, error) {
 	limit = pagination.NormalizeLimit(limit)
-	page = pagination.NormalizePage(page)
-	offset := pagination.CalculateOffset(page, limit)
-
-	countQuery := r.db.Model(&entity.Message{}).
-		Where("chat_id = ?", chatID)
-
-	var total int64
-	if err := countQuery.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
 
 	query := r.db.Where(&entity.Message{ChatID: chatID}).
 		Preload("Author").
 		Preload("Chat.User").
-		Order("messages.created_at DESC, messages.id DESC").
-		Offset(offset).
-		Limit(limit)
+		Order("messages.created_at DESC, messages.id DESC")
+
+	if nextToken != "" {
+		cursorID, err := pagination.DecodeToken(nextToken)
+		if err == nil && cursorID > 0 {
+			var cursorMessage entity.Message
+			if err := r.db.First(&cursorMessage, cursorID).Error; err == nil {
+				query = query.Where("(messages.created_at, messages.id) < (?, ?)", cursorMessage.CreatedAt, cursorMessage.ID)
+			}
+		}
+	}
+
+	query = query.Limit(limit + 1)
 
 	var messages []entity.Message
 	if err := query.Find(&messages).Error; err != nil {
-		return nil, 0, err
+		return nil, "", err
 	}
 
-	return messages, total, nil
+	var hasNext bool
+	if len(messages) > limit {
+		hasNext = true
+		messages = messages[:limit]
+	}
+
+	var token string
+	if hasNext && len(messages) > 0 {
+		lastMessage := messages[len(messages)-1]
+		token = pagination.EncodeToken(lastMessage.ID)
+	}
+
+	return messages, token, nil
 }
 
 func (r *messageRepository) GetByID(id uint) (*entity.Message, error) {
