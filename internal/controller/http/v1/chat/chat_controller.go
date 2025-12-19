@@ -6,17 +6,21 @@ import (
 
 	"gin-real-time-talk/internal/entity/interfaces"
 	"gin-real-time-talk/pkg/pagination"
+	"gin-real-time-talk/pkg/websocket"
 
 	"github.com/gin-gonic/gin"
+	ws "github.com/gorilla/websocket"
 )
 
 type ChatController struct {
 	chatUsecase interfaces.ChatUsecase
+	hub         *websocket.Hub
 }
 
-func NewChatController(chatUsecase interfaces.ChatUsecase) *ChatController {
+func NewChatController(chatUsecase interfaces.ChatUsecase, hub *websocket.Hub) *ChatController {
 	return &ChatController{
 		chatUsecase: chatUsecase,
+		hub:         hub,
 	}
 }
 
@@ -197,8 +201,48 @@ func (cc *ChatController) CreateMessage(c *gin.Context) {
 		return
 	}
 
+	if cc.hub != nil {
+		wsMessage := &websocket.Message{
+			Type:    "new_message",
+			Message: message,
+		}
+		cc.hub.BroadcastToUser(req.RecipientID, wsMessage)
+		cc.hub.BroadcastToUser(senderID, wsMessage)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data":    message,
 	})
+}
+
+func (cc *ChatController) HandleWebSocket(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "user not found"})
+		return
+	}
+
+	userIDUint, ok := userID.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "invalid user ID"})
+		return
+	}
+
+	upgrader := ws.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		return
+	}
+
+	client := websocket.NewClient(cc.hub, conn, userIDUint)
+	cc.hub.Register(client)
+
+	go client.WritePump()
+	go client.ReadPump()
 }

@@ -8,6 +8,7 @@ import (
 	"gin-real-time-talk/internal/usecase/repository"
 	"gin-real-time-talk/pkg/email"
 	"gin-real-time-talk/pkg/logger"
+	"gin-real-time-talk/pkg/websocket"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -34,10 +35,13 @@ func NewRouter(db *gorm.DB, logger *logger.Logger) *gin.Engine {
 	emailService := email.NewEmailService()
 	authUsecase := auth_usecase.NewAuthUsecase(userRepo, emailService)
 
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	api := router.Group("/api/v1")
 	{
 		auth.SetupAuthRoutes(api, db, authUsecase)
-		chat.SetupChatRoutes(api, db, authUsecase)
+		chat.SetupChatRoutes(api, db, authUsecase, hub)
 	}
 
 	return router
