@@ -8,6 +8,7 @@ import (
 	"gin-real-time-talk/internal/usecase/repository"
 	"gin-real-time-talk/pkg/email"
 	"gin-real-time-talk/pkg/logger"
+	"gin-real-time-talk/pkg/middleware"
 	"gin-real-time-talk/pkg/websocket"
 
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,8 @@ func NewRouter(db *gorm.DB, logger *logger.Logger) *gin.Engine {
 	}
 
 	router := gin.Default()
+
+	router.Use(middleware.CORSMiddleware())
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.InstanceName("swagger")))
 
